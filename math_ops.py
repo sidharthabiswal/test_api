@@ -3,29 +3,42 @@ import http.server
 import socketserver
 from typing import Tuple
 from http import HTTPStatus
+from functools import reduce
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
 
     def __init__(self, request: bytes, client_address: Tuple[str, int], server: socketserver.BaseServer, op_type, *args):
-        super().__init__(request, client_address, server)
+        super().__init__(request, client_address, server)              
+
+    def add(*args):
+        output = reduce(lambda x,y: x+y, args)
+        return output
+
+    def subtract(*args):
+        output = reduce(lambda x,y: x-y, args)
+        return output
+
+    def multiply(*args):
+        output = reduce(lambda x,y: x*y, args)
+        return output
+
+    def divide(*args):
+        output = reduce(lambda x,y: x/y, args)
+        return output
+
         
     @property
     def api_response(self):
-        if self.op_type == 'add':
-            output = self.args[0] + self.args[1]
-        elif self.op_type == 'subtract':
-            output = self.args[0] - self.args[1]
-        elif self.op_type == 'multiple':
-            output = self.args[0] * self.args[1]
-        return json.dumps({"output": output}).encode()
+        output = self.op_type(self.args)
+        return json.dumps({"output": output})
 
     def do_GET(self):
         if self.path == '/':
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(bytes(self.api_response))
+            self.api_response
 
 if __name__ == "__main__":
     PORT = 8000
